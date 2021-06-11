@@ -38,5 +38,5 @@ variable "etcd_backup_keys" {
 }
 
 variable "userdata_s3_bucket" {  
-  default = "k8learning"
+  default = "kube-31"
 }

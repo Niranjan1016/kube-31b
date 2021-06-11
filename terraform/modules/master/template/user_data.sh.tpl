@@ -13,7 +13,7 @@ tar -xzvf master-userdata.tar.gz
 ls -lrt
 export FULL_HOSTNAME="$(curl -s http://169.254.169.254/latest/meta-data/hostname)"
 export token="b0f7b8.8d1767876297d85c"
-ansible-playbook site.yml -i hosts/hosts.ini --limit master --extra-vars "token=$token kubernetes_version=${kubernetes_version} cluster_name=${cluster_name} hostname=$FULL_HOSTNAME master_alb_dns=${master_alb_dns}"
+ansible-playbook master-site.yml -i hosts/hosts.ini --limit master --extra-vars "token=$token kubernetes_version=${kubernetes_version} cluster_name=${cluster_name} hostname=$FULL_HOSTNAME master_alb_dns=${master_alb_dns}"
 
 if [ -f /home/ubuntu/admin.conf]; then
     touch /home/ubuntu/completed

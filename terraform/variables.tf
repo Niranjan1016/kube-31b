@@ -10,12 +10,12 @@ variable "cluster_name" {
 
 variable "ssh_public_key" {
   description = "Path to the pulic part of SSH key which should be used for the instance"
-  default     = "C:\\Users\\Niranjan\\.ssh\\id_rsa.pub"
+  default     = "~/.ssh/id_rsa.pub"
 }
 
 variable "private_key_file" {
   description = "Path to the pulic part of SSH key which should be used for the instance"
-  default     = "‪C:\\Users\\Niranjan/.ssh/id_rsa"
+  default     = "‪~/.ssh/id_rsa"
 }
 
 variable "cidr_block" {

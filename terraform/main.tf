@@ -74,6 +74,12 @@ resource "aws_security_group" "kubernetes-sg" {
         protocol = "TCP"
         cidr_blocks = ["0.0.0.0/0"]
     }
+    ingress {
+        from_port = 0
+        to_port = 65000
+        protocol = "TCP"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 
     tags = {
         Name = format("sg-%v", var.cluster_name)
@@ -230,6 +236,16 @@ module "master" {
     security_group_ids = [aws_security_group.kubernetes-sg.id]
     cluster_name = var.cluster_name
     s3_bucket = var.userdata_s3_bucket
+}
+
+resource "time_sleep" "wait_120_seconds" {
+  depends_on = [ module.master.master_ip ]
+
+  destroy_duration = "120s"
+}
+
+resource "null_resource" "next" {
+  depends_on = [time_sleep.wait_120_seconds]
 }
 
 module "worker" {

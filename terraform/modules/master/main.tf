@@ -77,7 +77,7 @@ resource "null_resource" "wait_for_bootstrap_to_finish" {
 }
 
 locals {
-  kubeconfig_file = "${abspath(pathexpand(var.kubeconfig_dir))}/${var.cluster_name}.conf"
+  kubeconfig_file = "${abspath(pathexpand(var.kubeconfig_dir))}/config"
 }
 
 resource "null_resource" "download_kubeconfig_file" {

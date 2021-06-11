@@ -74,7 +74,7 @@
   register: kubeadm_join
 
 - name: Reload kubelet daemon
-  when: kubelet_conf is succeeded
+#  when: kubelet_conf is succeeded
   systemd:
     name: kubelet
     daemon_reload: yes

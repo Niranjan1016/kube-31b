@@ -48,7 +48,7 @@ variable "s3_bucket" {
 }
 
 variable "ansible_bucket_name" {
-    default = "k8learning"
+    default = "kube-31"
 }
 
 variable "deployment_artifacts" {

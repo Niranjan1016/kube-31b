@@ -1,0 +1,11 @@
+- hosts: master
+  connection: local
+  gather_facts: yes
+  become: yes
+  vars:
+    config_dest: /home/ubuntu
+    kubeadm_config: /etc/kubernetes/admin.conf
+  roles:
+    - { role: docker}
+    - { role: kubernetes/master}
+

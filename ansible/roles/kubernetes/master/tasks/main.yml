@@ -1,0 +1,110 @@
+---
+
+- name: Add kubernetes APT GNG key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: Add Kubernetes APT repository
+  apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    filename: 'kubernetes'
+
+- name: Install Kubernetes packages
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+    force_apt_get: yes
+  loop: [ 'kubelet', 'kubeadm', 'kubectl', 'kubernetes-cni' ]
+
+- name: Disable system swap
+  shell: "swapoff -a"
+
+- name: Remove current swaps from fstab
+  lineinfile:
+    dest: /etc/fstab
+    regexp: '(?i)^([^#][\S]+\s+(none|swap)\s+swap.*)'
+    line: '# \1'
+    backrefs: yes
+    state: present
+
+- name: Disable swappiness and pass bridged IPv4 traffic to iptable's chains
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+  with_items:
+    - { name: 'vm.swappiness', value: '0' }
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: "1"}
+
+- name: Create kubelet service drop-in directory
+  file:
+    path: /etc/systemd/system/kubelet.service.d/
+    state: directory
+    owner: "{{ ansible_user | default(ansible_user_id) }}"
+    group: "{{ ansible_user | default(ansible_user_id) }}"
+    mode:  0755
+  register: kubelet_service_dir  
+
+#- name: Drop kubelet conf in drop-in directory
+#  when: kubelet_service_dir is succeeded
+#  template: 
+#    src: "../templates/20-kubeadm.conf.j2"
+#    dest: "/etc/systemd/system/kubelet.service.d/20-extra-args.conf"
+#  register: kubelet_conf
+
+- name: Copy kubeadm config to tmp directory
+  template: 
+    src: "../templates/kubeadm.yml.j2"
+    dest: "/tmp/kubeadm.yaml"
+  register: kubeadm_config_copied
+
+- name: reset kubernetes component
+  when: kubeadm_config_copied is succeeded
+  shell: "kubeadm reset --force"
+  register: reset_cluster
+
+- name: Initial kubedam using config
+  when: reset_cluster is succeeded
+  shell: "kubeadm init --config /tmp/kubeadm.yaml"
+  register: kubeadm_init
+
+- name: Reload kubelet daemon
+  systemd:
+    name: kubelet
+    daemon_reload: yes
+    enabled: yes
+  register: kubelet_reload
+
+- name: Create Kubernetes config directory
+  file:
+    path: ".kube/"
+    state: directory
+    
+- name: Copy networking config
+  template:
+    src: "../templates/calico.yml.j2"
+    dest: "/tmp/calico.yaml"
+
+#- name: Check if calico deamonset is already running
+#  shell: "kubectl --kubeconfig={{ kubeadm_config }} get ds --all-namespaces | grep calico"
+#  run_once: true
+#  register: calico_installed
+#  ignore_erros: true
+#  changed_when: false
+
+- name: Install Calico network contoroller interface
+#  when: calico_installed is failed
+  command: "kubectl apply --kubeconfig={{ kubeadm_config }} -f /tmp/calico.yaml"
+  run_once: true
+
+- name: Copy kube admin conf to home dir
+  fetch:
+    src: "{{ kubeadm_config }}"
+    dest: "{{ config_dest }}/admin.conf"
+    flat: yes
+  run_once: yes
+  ignore_errors: yes

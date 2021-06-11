@@ -1,0 +1,18 @@
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: ${master_alb_dns}:6443
+    token: ${token}
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+  tlsBootstrapToken: ${token}
+nodeRegistration:
+  criSocket: /var/run/dockershim.sock
+  kubeletExtraArgs:
+    cloud-provider: aws
+    read-only-port: "10255"
+  name: ${FULL_HOSTNAME}
+---
+EOF

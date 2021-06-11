@@ -232,6 +232,19 @@ module "master" {
     s3_bucket = var.userdata_s3_bucket
 }
 
+module "worker" {
+    source = "./modules/worker"
+    vpc_id = aws_vpc.kubernetes.id
+    min_worker_count = "1"
+    max_worker_count = "1"
+    key_name = aws_key_pair.kubernetes.id
+    ssh_private_key = var.private_key_file
+    instance_profile = aws_iam_instance_profile.node_profile.id
+    worker_subnet_ids = aws_subnet.kubernetes.*.id
+    security_group_ids = [aws_security_group.kubernetes-sg.id]
+    cluster_name = var.cluster_name
+    bucket_name = var.userdata_s3_bucket
+} 
 
 
 

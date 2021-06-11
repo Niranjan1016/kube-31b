@@ -10,10 +10,12 @@ sudo mkdir -p /var/ansible/
 cd /var/ansible/
 aws s3 cp s3://${BUCKET_NAME}/${DEPLOYMENT_PREFIX}/ansible.tar.gz master-userdata.tar.gz
 tar -xzvf master-userdata.tar.gz
+cd ansible
 ls -lrt
 export FULL_HOSTNAME="$(curl -s http://169.254.169.254/latest/meta-data/hostname)"
 export token="b0f7b8.8d1767876297d85c"
-ansible-playbook master-site.yml -i hosts/hosts.ini --limit master --extra-vars "token=$token kubernetes_version=${kubernetes_version} cluster_name=${cluster_name} hostname=$FULL_HOSTNAME master_alb_dns=${master_alb_dns}"
+export ip=curl http://169.254.169.254/latest/meta-data/public-ipv4
+ansible-playbook master-site.yml -i hosts/hosts.ini --limit master --extra-vars "token=$token kubernetes_version=${kubernetes_version} cluster_name=${cluster_name} hostname=$FULL_HOSTNAME master_alb_dns=$ip"
 
 if [ -f /home/ubuntu/admin.conf]; then
     touch /home/ubuntu/completed

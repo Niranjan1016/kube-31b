@@ -36,7 +36,7 @@ data "template_file" "user_data" {
     DEPLOYMENT_PREFIX = var.deployment_artifacts
     kubernetes_version = var.kubernetes_version
     cluster_name = var.cluster_name
-    master_alb_dns = aws_alb.controller.dns_name
+#    master_alb_dns = aws_alb.controller.dns_name
   }
 }
 

@@ -49,3 +49,7 @@ variable "bucket_name" {
 variable "deployment_artifacts" {
      default = "ansible"
 }
+
+variable "master_alb_dns" {
+    default = ""
+}

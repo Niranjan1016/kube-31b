@@ -13,7 +13,7 @@ data "template_file" "user_data" {
     BUCKET_NAME = var.ansible_bucket_name
     DEPLOYMENT_PREFIX = var.deployment_artifacts
     cluster_name = var.cluster_name
-    master_alb_dns = aws_alb.controller.dns_name
+    master_alb_dns = var.master_alb_dns
   }
 }
 
@@ -60,3 +60,4 @@ resource "aws_autoscaling_group" "nodes" {
     ignore_changes = [desired_capacity]
   }
 }
+

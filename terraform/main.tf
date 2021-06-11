@@ -237,6 +237,7 @@ module "worker" {
     vpc_id = aws_vpc.kubernetes.id
     min_worker_count = "1"
     max_worker_count = "1"
+    master_alb_dns = module.master.alb_dns_name
     key_name = aws_key_pair.kubernetes.id
     ssh_private_key = var.private_key_file
     instance_profile = aws_iam_instance_profile.node_profile.id

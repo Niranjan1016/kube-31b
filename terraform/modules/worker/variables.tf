@@ -43,7 +43,7 @@ variable "worker_subnet_ids" {
 }
 
 variable "bucket_name" {
-    default = "k8learning"
+    default = "kube-31"
 }
 
 variable "deployment_artifacts" {

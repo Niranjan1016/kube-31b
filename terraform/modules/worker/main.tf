@@ -10,7 +10,7 @@ data "template_file" "user_data" {
   template = file("${path.module}/template/user_data.sh.tpl")
 
   vars = {
-    BUCKET_NAME = var.ansible_bucket_name
+    BUCKET_NAME = var.bucket_name
     DEPLOYMENT_PREFIX = var.deployment_artifacts
     cluster_name = var.cluster_name
     master_alb_dns = var.master_alb_dns

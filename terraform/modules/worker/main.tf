@@ -52,8 +52,7 @@ resource "aws_autoscaling_group" "nodes" {
       key                 = "Name"
       value               = "${var.cluster_name}-node"
       propagate_at_launch = true
-    }],
-    var.tags2,
+    }]
   )
 
   lifecycle {

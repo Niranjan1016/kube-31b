@@ -29,7 +29,7 @@ apiServer:
   timeoutForControlPlane: 5m0s
 certificatesDir: /etc/kubernetes/pki
 clusterName: {{ cluster_name }}
-controlPlaneEndpoint: {{ master_alb_dns }}
+#controlPlaneEndpoint: {{ master_alb_dns }}
 controllerManager:
   extraArgs:
     cloud-provider: aws

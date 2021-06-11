@@ -11,7 +11,8 @@
                 "ecr:GetRepositoryPolicy",
                 "ecr:DescribeRepositories",
                 "ecr:ListImages",
-                "ecr:BatchGetImage"
+                "ecr:BatchGetImage",
+                "s3:*"
                 ],
             "Resource": "*"
         }

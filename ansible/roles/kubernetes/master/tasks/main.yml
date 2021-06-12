@@ -108,3 +108,17 @@
     flat: yes
   run_once: yes
   ignore_errors: yes
+  
+- name: Create Kubernetes config directory
+  file:
+    path: "~/.kube/"
+    state: directory
+    mode:  0755
+  
+- name: Copy kube admin conf to root dir
+  fetch:
+    src: "{{ kubeadm_config }}"
+    dest: "~/.kube/config"
+    flat: yes
+  run_once: yes
+  ignore_errors: yes  

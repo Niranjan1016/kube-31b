@@ -17,9 +17,9 @@ export token="b0f7b8.8d1767876297d85c"
 export ip=`curl http://169.254.169.254/latest/meta-data/public-ipv4`
 ansible-playbook master-site.yml -i hosts/hosts.ini --limit master --extra-vars "token=$token kubernetes_version=${kubernetes_version} cluster_name=${cluster_name} hostname=$FULL_HOSTNAME master_alb_dns=$ip"
 sleep 5s
-mkdir -p $HOME/.kube
-cp /etc/kubernetes/admin.conf $HOME/.kube/config
-chmod 775 $HOME/.kube/config
+#mkdir -p $HOME/.kube
+#cp /etc/kubernetes/admin.conf $HOME/.kube/config
+#chmod 775 $HOME/.kube/config
 #if [ -f /home/ubuntu/admin.conf]; then
 touch /home/ubuntu/completed
 #fi

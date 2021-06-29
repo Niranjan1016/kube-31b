@@ -68,25 +68,29 @@
 
 
 - name: Change permissions on aws-iam-authenticator binary
-  when: aws-iam-authenticator_downloaded is succeeded
+  when: aws_iam_authenticator_downloaded is succeeded
   command: "chmod +x /tmp/aws-iam-authenticator"
-  register: aws_am_authenticator_permissions
+  register: aws_iam_authenticator_permissions
 
 
 - name: init aws-iam-authenticator
   when: aws_iam_authenticator_permissions is succeeded
-  command: "./tmp/aws-iam-authenticator init --cluster-id={{ cluster_name }}"
+  command: "/tmp/aws-iam-authenticator init --cluster-id={{ cluster_name }}"
   register: aws_iam_authenticator_init_completed
 
 
 - name: copy cert perm and kubeconfig.yaml files to valid locations
   when: aws_iam_authenticator_init_completed is succeeded
-  command: "mkdir -p /var/aws-iam-authenticator/ && mkdir -p /etc/kubernetes/aws-iam-authenticator/  && mv /tmp/*.pem /var/aws-iam-authenticator/ && mv/tmp/*kubeconfig /tmp/kubeconfig.yaml"
+  command: "mkdir -p /var/aws-iam-authenticator/ && mkdir -p /etc/kubernetes/aws-iam-authenticator/"
   register: copied_aws_auth_files
 
 - name: Change permissions on cert directories
   when: copied_aws_auth_files is succeeded
-  command: "chmod -R 775 /var/aws-iam-authenticator/ && chmod -R 775 /etc/kubernetes/aws-iam-authenticator/"
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+     - { src: '/var/ansible/ansible/cert.pem', dest: '/var/aws-iam-authenticator/cert.pem' }
+     - { src: '/var/ansible/ansible/key.pem', dest: '/var/aws-iam-authenticator/key.pem' }
+     - { src: '/var/ansible/ansible/aws-iam-authenticator.kubeconfig', dest: '/etc/kubernetes/aws-iam-authenticator/kubeconfig.yaml' }
 
 - name: reset kubernetes component
   when: kubeadm_config_copied is succeeded

@@ -56,7 +56,7 @@ variable "deployment_artifacts" {
 }
 
 variable "kubernetes_version" {
-    default = "1.21.1"
+    default = "1.21.2"
 }
 
 variable "kubeconfig_dir" {

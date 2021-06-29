@@ -62,27 +62,25 @@
     dest: "/tmp/kubeadm.yaml"
   register: kubeadm_config_copied
 
-
 - name: Download aws-iam-authenticator
   command: "curl -o /tmp/aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator"
-  state: present
-  register: aws-iam-authenticator_downloaded
+  register: aws_iam_authenticator_downloaded
 
 
 - name: Change permissions on aws-iam-authenticator binary
   when: aws-iam-authenticator_downloaded is succeeded
   command: "chmod +x /tmp/aws-iam-authenticator"
-  register: aws-iam-authenticator_permissions
+  register: aws_am_authenticator_permissions
 
 
 - name: init aws-iam-authenticator
-  when: aws-iam-authenticator_permissions is succeeded
-  command: "/tmp/aws-iam-authenticator init --cluster-ID={{ cluster_name }}"
-  register: aws-iam-authenticator_init_completed
+  when: aws_iam_authenticator_permissions is succeeded
+  command: "./tmp/aws-iam-authenticator init --cluster-id={{ cluster_name }}"
+  register: aws_iam_authenticator_init_completed
 
 
 - name: copy cert perm and kubeconfig.yaml files to valid locations
-  when: aws-iam-authenticator_init_completed is succeeded
+  when: aws_iam_authenticator_init_completed is succeeded
   command: "mkdir -p /var/aws-iam-authenticator/ && mkdir -p /etc/kubernetes/aws-iam-authenticator/  && mv /tmp/*.pem /var/aws-iam-authenticator/ && mv/tmp/*kubeconfig /tmp/kubeconfig.yaml"
   register: copied_aws_auth_files
 

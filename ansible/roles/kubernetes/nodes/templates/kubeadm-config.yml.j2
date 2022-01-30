@@ -12,5 +12,6 @@ nodeRegistration:
   criSocket: /var/run/dockershim.sock
   kubeletExtraArgs:
     cloud-provider: aws
+    cgroup-driver: cgroupfs
     read-only-port: "10255"
   name: {{ hostname }}

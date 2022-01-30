@@ -9,7 +9,6 @@
   apt_repository:
     repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
     state: present
-    filename: 'kubernetes'
 
 - name: Install Kubernetes packages
   apt:
@@ -17,7 +16,7 @@
     state: latest
     update_cache: yes
     force_apt_get: yes
-  loop: [ 'kubelet', 'kubeadm', 'kubectl', 'kubernetes-cni' ]
+  with_items: [ 'kubelet', 'kubeadm', 'kubectl', 'kubernetes-cni' ]
 
 - name: Disable system swap
   shell: "swapoff -a"
@@ -50,7 +49,7 @@
   register: kubelet_service_dir  
 
 #- name: Drop kubelet conf in drop-in directory
-#  when: kubelet_service_dir is succeeded
+#  when: kubelet_service_dir| success
 #  template: 
 #    src: "../templates/20-kubeadm.conf.j2"
 #    dest: "/etc/systemd/system/kubelet.service.d/20-extra-args.conf"
@@ -68,24 +67,24 @@
 
 
 - name: Change permissions on aws-iam-authenticator binary
-  when: aws_iam_authenticator_downloaded is succeeded
+  when: aws_iam_authenticator_downloaded| success
   command: "chmod +x /tmp/aws-iam-authenticator"
   register: aws_iam_authenticator_permissions
 
 
 - name: init aws-iam-authenticator
-  when: aws_iam_authenticator_permissions is succeeded
+  when: aws_iam_authenticator_permissions| success
   command: "/tmp/aws-iam-authenticator init --cluster-id={{ cluster_name }}"
   register: aws_iam_authenticator_init_completed
 
 
 - name: copy cert perm and kubeconfig.yaml files to valid locations
-  when: aws_iam_authenticator_init_completed is succeeded
+  when: aws_iam_authenticator_init_completed| success
   command: "mkdir -p /var/aws-iam-authenticator/ && mkdir -p /etc/kubernetes/aws-iam-authenticator/"
   register: copied_aws_auth_files
 
 - name: Change permissions on cert directories
-  when: copied_aws_auth_files is succeeded
+  when: copied_aws_auth_files| success
   copy: src={{ item.src }} dest={{ item.dest }}
   with_items:
      - { src: '/var/ansible/ansible/cert.pem', dest: '/var/aws-iam-authenticator/cert.pem' }
@@ -93,21 +92,17 @@
      - { src: '/var/ansible/ansible/aws-iam-authenticator.kubeconfig', dest: '/etc/kubernetes/aws-iam-authenticator/kubeconfig.yaml' }
 
 - name: reset kubernetes component
-  when: kubeadm_config_copied is succeeded
+  when: kubeadm_config_copied| success
   shell: "kubeadm reset --force"
   register: reset_cluster
 
 - name: Initial kubedam using config
-  when: reset_cluster is succeeded
+  when: reset_cluster| success
   shell: "kubeadm init --config /tmp/kubeadm.yaml"
   register: kubeadm_init
 
 - name: Reload kubelet daemon
-  systemd:
-    name: kubelet
-    daemon_reload: yes
-    enabled: yes
-  register: kubelet_reload
+  command: systemctl daemon-reload
 
 - name: Create Kubernetes config directory
   file:
@@ -127,7 +122,7 @@
 #  changed_when: false
 
 - name: Install Calico network contoroller interface
-#  when: calico_installed is failed
+#  when: calico_installed| failed
   command: "kubectl apply --kubeconfig={{ kubeadm_config }} -f /tmp/calico.yaml"
   run_once: true
 
@@ -136,8 +131,8 @@
     src: "{{ kubeadm_config }}"
     dest: "{{ config_dest }}/admin.conf"
     flat: yes
-  run_once: yes
-  ignore_errors: yes
+  run_once: true
+  ignore_errors: true
   
 - name: Create Kubernetes config directory
   file:
@@ -150,5 +145,5 @@
     src: "{{ kubeadm_config }}"
     dest: "~/.kube/config"
     flat: yes
-  run_once: yes
-  ignore_errors: yes  
+  run_once: true
+  ignore_errors: true  

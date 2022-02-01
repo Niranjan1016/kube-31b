@@ -4,6 +4,7 @@ sudo apt-get update && sudo apt-get install -y python3 awscli
 sudo apt install -y software-properties-common
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt install -y ansible
+sudo echo "KUBECONFIG=/etc/kubernetes/admin.conf">>/etc/environment
 sudo echo "******************Installing ansible playbooks***************************"
 [-d /var/ansible ] && sudo rm -rf /var/ansible
 sudo mkdir -p /var/ansible/

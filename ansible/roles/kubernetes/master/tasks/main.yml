@@ -15,7 +15,6 @@
     name: "{{ item }}"
     state: latest
     update_cache: yes
-    force_apt_get: yes
   with_items: [ 'kubelet', 'kubeadm', 'kubectl', 'kubernetes-cni' ]
 
 - name: Disable system swap
@@ -96,6 +95,9 @@
   shell: "kubeadm reset --force"
   register: reset_cluster
 
+- name: set kubehome env
+  command: echo "KUBECONFIG=/etc/kubernetes/admin.conf">>/etc/environment
+
 - name: Initial kubedam using config
   when: reset_cluster| success
   shell: "kubeadm init --config /tmp/kubeadm.yaml"
@@ -123,7 +125,7 @@
 
 - name: Install Calico network contoroller interface
 #  when: calico_installed| failed
-  command: "kubectl apply --kubeconfig={{ kubeadm_config }} -f /tmp/calico.yaml"
+  command: "kubectl apply --kubeconfig=/etc/kubernetes/admin.conf -f /tmp/calico.yaml"
   run_once: true
 
 - name: Copy kube admin conf to home dir

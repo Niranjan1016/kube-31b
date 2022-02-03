@@ -8,6 +8,7 @@
   roles:
     - { role: docker}
     - { role: kubernetes/master}
+    - { role: kubernetes/addons}
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 

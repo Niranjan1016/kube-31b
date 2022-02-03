@@ -149,3 +149,23 @@
     flat: yes
   run_once: true
   ignore_errors: true  
+
+- name: Awaiting all PODs to start
+  shell:
+    cmd: |
+      echo "Get total PODs and wait until all of them are in Running state to move forward"
+      TOT=`kubectl get pods --all-namespaces|awk '{print $4}'|wc -l`
+      COUNT_RUNNING=`kubectl get pods --all-namespaces|awk '{print $4}'|grep Running|wc -l`
+      echo "Total PODs: $TOT"
+      echo "Total running pods: $COUNT_RUNNING"
+      let DIFF="$(($TOT)) - $(($COUNT_RUNNING))"
+      sleep 40
+      while [  $(($DIFF)) -gt 1 ]; do
+        sleep 20
+        TOT=`kubectl get pods --all-namespaces|awk '{print $4}'|wc -l`
+        COUNT_RUNNING=`kubectl get pods --all-namespaces|awk '{print $4}'|grep Running|wc -l`
+        let DIFF="$(($TOT)) - $(($COUNT_RUNNING))"
+        echo "Total PODs : $COUNT_RUNNING"
+        echo "Pending to initiate: $DIFF"
+      done
+      echo "All PODs are running"

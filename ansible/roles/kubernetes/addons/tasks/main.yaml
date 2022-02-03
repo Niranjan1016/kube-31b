@@ -1,0 +1,15 @@
+---
+
+- name: install kubernetes dashboard
+  command: "kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.4.0/aio/deploy/recommended.yaml"
+  register: kubernetes_dashboard_installed
+
+- name: copy admin-user files
+  template: 
+    src: "../templates/k8s_dashboard_admin_sa.yaml"
+    dest: "/tmp/k8s_dashboard_admin_sa.yaml"
+  register: kubeadm_dashboard_sa_copied
+
+- name: create sa and role for dashboard
+  when: kubeadm_dashboard_sa_copied | success
+  command: "kubectl apply -f /tmp/k8s_dashboard_admin_sa.yaml"

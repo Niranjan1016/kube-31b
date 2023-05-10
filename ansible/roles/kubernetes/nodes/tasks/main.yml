@@ -10,12 +10,30 @@
     repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
     state: present
 
-- name: Install Kubernetes packages
+- name: install kubelet
   apt:
-    name: "{{ item }}"
-    state: latest
-    update_cache: yes
-  with_items: [ 'kubelet', 'kubeadm', 'kubectl', 'kubernetes-cni' ]
+    name: kubelet=1.25.0-00
+    state: present
+    update_cache: true  
+
+- name: install kubeadm
+  apt:
+    name: kubeadm=1.25.0-00
+    state: present
+    update_cache: true  
+
+- name: install kubectl
+  apt:
+    name: kubectl=1.25.0-00
+    state: present
+    update_cache: true
+    dpkg_options: force-downgrade 
+
+- name: install kubernetes-cni
+  apt:
+    name: kubernetes-cni
+    state: present
+    update_cache: true
 
 - name: Disable system swap
   shell: "swapoff -a"
@@ -56,7 +74,7 @@
 
 
 - name: Reset Kubernetes component
-  shell: "kubeadm reset --force --cri-socket=/var/run/containerd/containerd.sock"
+  shell: "kubeadm reset --force --cri-socket=/run/cri-dockerd.sock"
   register: reset_cluster
 
 - name: Copy kubeadm config to tmp directory

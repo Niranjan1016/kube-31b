@@ -10,7 +10,7 @@ bootstrapTokens:
   - authentication
 kind: InitConfiguration
 nodeRegistration:
-  criSocket: unix:////run/cri-dockerd.sock
+  criSocket: unix:///run/cri-dockerd.sock
   imagePullPolicy: IfNotPresent
   kubeletExtraArgs:
     cloud-provider: aws

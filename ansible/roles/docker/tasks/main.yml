@@ -13,7 +13,7 @@
 
 - name: install docker repo
   apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable
+    repo: deb https://download.docker.com/linux/ubuntu xenial stable
     state: present
 
 - name: Install docker and containerd 
@@ -32,36 +32,31 @@
     dest: "/etc/docker/daemon.json"
   register: docker_daemon_copied
    
+- name: daemon reload - docker
+  command: systemctl daemon-reload
+
+- name: service restart docker
+  command: systemctl restart docker
+
+- name: service enable docker
+  command: systemctl enable docker
+
 - name: add remote user to group docker
   command: usermod -aG docker ubuntu
 
-- name: Enable and check Docker service
-  systemd:
-    state: restarted
-    daemon_reload: true
-    name: docker
-    enabled: true
-  register: started_docker
-
-- name: Download latest cri-dockerd binary version
-  when: started_docker| success
-  command: "VER=$(curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest|grep tag_name | cut -d '\"' -f 4|sed 's/v//g') && echo $VER "
-  register: cri-dockerd-version
-
 - name: Download latest cri-dockerd binary
-  when: cri-dockerd-version| success
-  command: "wget https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.amd64.tgz"
-  register: cri-dockerd-download
+  command: "wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.1/cri-dockerd-0.3.1.amd64.tgz"
+  register: cri_dockerd_download
 
 - name: untar cri-dockerd binary
-  when: cri-dockerd-download| success
-  command: "tar xvf cri-dockerd-${VER}.amd64.tgz"
-  register: cri-dockerd-binary-untar
+  when: cri_dockerd_download| success
+  command: "tar xvf cri-dockerd-0.3.1.amd64.tgz"
+  register: cri_dockerd_binary_untar
 
 - name: move cri-dockerd to bin
-  when: cri-dockerd-download| success
+  when: cri_dockerd_binary_untar| success
   command: "mv cri-dockerd/cri-dockerd /usr/local/bin/"
-  register: moved-cri-dockerd
+  register: moved_cri_dockerd
 
 - name: Copy cri-docker.service to systemd 
   template: 
@@ -78,18 +73,14 @@
 - name: add remote user to group docker
   command: usermod -aG docker ubuntu
 
-- name: Enable and cri-docker service
-  systemd:    
-    daemon_reload: true
-    name: cri-docker.service
-    enabled: true
-  register: enable-cri-docker.service
+- name: daemon reload - cri-docker
+  command: systemctl daemon-reload
 
-- name: Enable and cri-docker socket
-  systemd:
-    name: cri-docker.socket
-    enabled: true
-  register: enable-cri-docker.socket  
+- name: service enable cri-docker.service
+  command: systemctl enable cri-docker.service
+
+- name: service enable cri-docker.socket
+  command: systemctl enable --now cri-docker.socket 
 
 
 # - name: Enable and check Docker service

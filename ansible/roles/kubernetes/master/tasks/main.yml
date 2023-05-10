@@ -27,11 +27,12 @@
   apt:
     name: kubectl=1.25.0-00
     state: present
-    update_cache: true  
+    update_cache: true
+    dpkg_options: force-downgrade  
 
 - name: install kubernetes-cni
   apt:
-    name: kubernetes-cni=1.25.0-00
+    name: kubernetes-cni
     state: present
     update_cache: true
 
@@ -86,39 +87,39 @@
     dest: "/tmp/kubeadm.yaml"
   register: kubeadm_config_copied
 
-- name: Download aws-iam-authenticator
-  command: "curl -o /tmp/aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator"
-  register: aws_iam_authenticator_downloaded
+# - name: Download aws-iam-authenticator
+#   command: "curl -o /tmp/aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/aws-iam-authenticator"
+#   register: aws_iam_authenticator_downloaded
 
 
-- name: Change permissions on aws-iam-authenticator binary
-  when: aws_iam_authenticator_downloaded| success
-  command: "chmod +x /tmp/aws-iam-authenticator"
-  register: aws_iam_authenticator_permissions
+# - name: Change permissions on aws-iam-authenticator binary
+#   when: aws_iam_authenticator_downloaded| success
+#   command: "chmod +x /tmp/aws-iam-authenticator"
+#   register: aws_iam_authenticator_permissions
 
 
-- name: init aws-iam-authenticator
-  when: aws_iam_authenticator_permissions| success
-  command: "/tmp/aws-iam-authenticator init --cluster-id={{ cluster_name }}"
-  register: aws_iam_authenticator_init_completed
+# - name: init aws-iam-authenticator
+#   when: aws_iam_authenticator_permissions| success
+#   command: "/tmp/aws-iam-authenticator init --cluster-id={{ cluster_name }}"
+#   register: aws_iam_authenticator_init_completed
 
 
-- name: copy cert perm and kubeconfig.yaml files to valid locations
-  when: aws_iam_authenticator_init_completed| success
-  command: "mkdir -p /var/aws-iam-authenticator/ && mkdir -p /etc/kubernetes/aws-iam-authenticator/"
-  register: copied_aws_auth_files
+# - name: copy cert perm and kubeconfig.yaml files to valid locations
+#   when: aws_iam_authenticator_init_completed| success
+#   command: "mkdir -p /var/aws-iam-authenticator/ && mkdir -p /etc/kubernetes/aws-iam-authenticator/"
+#   register: copied_aws_auth_files
 
-- name: Change permissions on cert directories
-  when: copied_aws_auth_files| success
-  copy: src={{ item.src }} dest={{ item.dest }}
-  with_items:
-     - { src: '/var/ansible/ansible/cert.pem', dest: '/var/aws-iam-authenticator/cert.pem' }
-     - { src: '/var/ansible/ansible/key.pem', dest: '/var/aws-iam-authenticator/key.pem' }
-     - { src: '/var/ansible/ansible/aws-iam-authenticator.kubeconfig', dest: '/etc/kubernetes/aws-iam-authenticator/kubeconfig.yaml' }
+# - name: Change permissions on cert directories
+#   when: copied_aws_auth_files| success
+#   copy: src={{ item.src }} dest={{ item.dest }}
+#   with_items:
+#      - { src: '/var/ansible/ansible/cert.pem', dest: '/var/aws-iam-authenticator/cert.pem' }
+#      - { src: '/var/ansible/ansible/key.pem', dest: '/var/aws-iam-authenticator/key.pem' }
+#      - { src: '/var/ansible/ansible/aws-iam-authenticator.kubeconfig', dest: '/etc/kubernetes/aws-iam-authenticator/kubeconfig.yaml' }
 
 - name: reset kubernetes component
   when: kubeadm_config_copied| success
-  shell: "kubeadm reset --force"
+  shell: "kubeadm reset --force --cri-socket=/run/cri-dockerd.sock"
   register: reset_cluster
 
 - name: set kubehome env
@@ -141,13 +142,6 @@
   template:
     src: "../templates/calico.yml.j2"
     dest: "/tmp/calico.yaml"
-
-#- name: Check if calico deamonset is already running
-#  shell: "kubectl --kubeconfig={{ kubeadm_config }} get ds --all-namespaces | grep calico"
-#  run_once: true
-#  register: calico_installed
-#  ignore_erros: true
-#  changed_when: false
 
 - name: Install Calico network contoroller interface
 #  when: calico_installed| failed

@@ -4,7 +4,7 @@
     name: "{{ item }}"
     state: latest
     update_cache: yes
-  with_items: ['apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools']
+  with_items: ['wget','git','apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools']
 
 - name: install docker GPG apt key
   apt_key:
@@ -13,24 +13,91 @@
 
 - name: install docker repo
   apt_repository:
-    repo: deb https://download.docker.com/linux/ubuntu xenial stable
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable
     state: present
 
-- name: install docker
+- name: Install docker and containerd 
   apt:
-   update_cache: yes
-   name: docker-ce
-   state: latest
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items: [ 'docker-ce', 'containerd.io', 'docker-ce-cli']
 
+- name: Create docker systemd directory
+  command: "sudo mkdir -p /etc/systemd/system/docker.service.d"
+
+- name: Copy docker config json
+  template: 
+    src: "../templates/daemon.json.j2"
+    dest: "/etc/docker/daemon.json"
+  register: docker_daemon_copied
+   
 - name: add remote user to group docker
   command: usermod -aG docker ubuntu
 
 - name: Enable and check Docker service
-  service:
-    name: docker
+  systemd:
     state: restarted
-    enabled: yes
+    daemon_reload: true
+    name: docker
+    enabled: true
   register: started_docker
 
-- name: enable if command above does strange things (debug me)
-  command: systemctl enable docker
+- name: Download latest cri-dockerd binary version
+  when: started_docker| success
+  command: "VER=$(curl -s https://api.github.com/repos/Mirantis/cri-dockerd/releases/latest|grep tag_name | cut -d '\"' -f 4|sed 's/v//g') && echo $VER "
+  register: cri-dockerd-version
+
+- name: Download latest cri-dockerd binary
+  when: cri-dockerd-version| success
+  command: "wget https://github.com/Mirantis/cri-dockerd/releases/download/v${VER}/cri-dockerd-${VER}.amd64.tgz"
+  register: cri-dockerd-download
+
+- name: untar cri-dockerd binary
+  when: cri-dockerd-download| success
+  command: "tar xvf cri-dockerd-${VER}.amd64.tgz"
+  register: cri-dockerd-binary-untar
+
+- name: move cri-dockerd to bin
+  when: cri-dockerd-download| success
+  command: "mv cri-dockerd/cri-dockerd /usr/local/bin/"
+  register: moved-cri-dockerd
+
+- name: Copy cri-docker.service to systemd 
+  template: 
+    src: "../templates/cri-docker.service.j2"
+    dest: "/etc/systemd/system/cri-docker.service"
+  register: cri-docker.service_copied
+
+- name: Copy cri-docker.socket to systemd 
+  template: 
+    src: "../templates/cri-docker.socket.j2"
+    dest: "/etc/systemd/system/cri-docker.socket"
+  register: cri-docker.service_copied
+
+- name: add remote user to group docker
+  command: usermod -aG docker ubuntu
+
+- name: Enable and cri-docker service
+  systemd:    
+    daemon_reload: true
+    name: cri-docker.service
+    enabled: true
+  register: enable-cri-docker.service
+
+- name: Enable and cri-docker socket
+  systemd:
+    name: cri-docker.socket
+    enabled: true
+  register: enable-cri-docker.socket  
+
+
+# - name: Enable and check Docker service
+#   service:
+#     name: docker
+#     state: restarted
+#     enabled: yes
+#   register: started_docker
+
+# - name: enable if command above does strange things (debug me)
+#   command: systemctl enable docker

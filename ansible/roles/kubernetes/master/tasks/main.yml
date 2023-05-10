@@ -10,12 +10,31 @@
     repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
     state: present
 
-- name: Install Kubernetes packages
+- name: install kubelet
   apt:
-    name: "{{ item }}"
-    state: latest
-    update_cache: yes
-  with_items: [ 'kubelet', 'kubeadm', 'kubectl', 'kubernetes-cni' ]
+    name: kubelet=1.25.0-00
+    state: present
+    update_cache: true  
+
+- name: install kubeadm
+  apt:
+    name: kubeadm=1.25.0-00
+    state: present
+    update_cache: true  
+
+
+- name: install kubectl
+  apt:
+    name: kubectl=1.25.0-00
+    state: present
+    update_cache: true  
+
+- name: install kubernetes-cni
+  apt:
+    name: kubernetes-cni=1.25.0-00
+    state: present
+    update_cache: true
+
 
 - name: Disable system swap
   shell: "swapoff -a"
@@ -28,6 +47,9 @@
     backrefs: yes
     state: present
 
+- name: Enable kernel modules
+  command: "sudo modprobe overlay && sudo modprobe br_netfilter"    
+
 - name: Disable swappiness and pass bridged IPv4 traffic to iptable's chains
   sysctl:
     name: "{{ item.name }}"
@@ -37,6 +59,10 @@
     - { name: 'vm.swappiness', value: '0' }
     - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
     - { name: 'net.bridge.bridge-nf-call-ip6tables', value: "1"}
+    - { name: 'net.ipv4.ip_forward', value='1'}
+
+- name: Reload sysctl modules
+  command: "sudo sysctl --system"   
 
 - name: Create kubelet service drop-in directory
   file:

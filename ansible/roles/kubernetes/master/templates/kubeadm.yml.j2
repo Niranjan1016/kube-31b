@@ -1,6 +1,5 @@
 ---
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: InitConfiguration
+apiVersion: kubeadm.k8s.io/v1beta3
 bootstrapTokens:
 - groups:
   - system:bootstrappers:kubeadm:default-node-token
@@ -9,46 +8,45 @@ bootstrapTokens:
   usages:
   - signing
   - authentication
+kind: InitConfiguration
 nodeRegistration:
-  criSocket: /var/run/dockershim.sock
+  criSocket: unix:////run/cri-dockerd.sock
+  imagePullPolicy: IfNotPresent
   kubeletExtraArgs:
     cloud-provider: aws
-    cgroup-driver: cgroupfs
     read-only-port: "10255"
   name: {{ hostname }}
   taints:
   - effect: NoSchedule
     key: node-role.kubernetes.io/master
 ---
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: ClusterConfiguration
 apiServer:
   certSANs:
   - {{ master_alb_dns }}
   extraArgs:
+    #authentication-token-webhook-config-file: /etc/kubernetes/aws-iam-authenticator/kubeconfig.yaml
     cloud-provider: aws
-    authentication-token-webhook-config-file: /etc/kubernetes/aws-iam-authenticator/kubeconfig.yaml
   extraVolumes:
-    - name: aws-iam-authenticator
-      hostPath: /etc/kubernetes/aws-iam-authenticator
-      mountPath: /etc/kubernetes/aws-iam-authenticator
+  #- hostPath: /etc/kubernetes/aws-iam-authenticator
+  #  mountPath: /etc/kubernetes/aws-iam-authenticator
+  #  name: aws-iam-authenticator
   timeoutForControlPlane: 5m0s
+apiVersion: kubeadm.k8s.io/v1beta3
 certificatesDir: /etc/kubernetes/pki
 clusterName: {{ cluster_name }}
 controlPlaneEndpoint: {{ master_alb_dns }}
 controllerManager:
   extraArgs:
     cloud-provider: aws
-dns:
-  type: CoreDNS
+dns: {}
 etcd:
   local:
     dataDir: /var/lib/etcd
-imageRepository: k8s.gcr.io
-kubernetesVersion: {{ kubernetes_version }}
+imageRepository: registry.k8s.io
+kind: ClusterConfiguration
+kubernetesVersion: v1.25.0
 networking:
   dnsDomain: cluster.local
-  podSubnet: ""
-  serviceSubnet: 10.96.0.0/12
+  serviceSubnet: 192.168.0.0/16
 scheduler: {}
 ---

@@ -56,9 +56,9 @@ variable "deployment_artifacts" {
 }
 
 variable "kubernetes_version" {
-    default = "1.23.3"
+    default = "1.25.0"
 }
 
 variable "kubeconfig_dir" {
-    default = "~/.kube/"
+    default = "~/workspace/kubernetes/kube-31b"
 }

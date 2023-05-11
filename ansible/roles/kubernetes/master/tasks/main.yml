@@ -28,6 +28,7 @@
     name: kubectl=1.25.0-00
     state: present
     update_cache: true
+    force: yes
     dpkg_options: force-downgrade  
 
 - name: install kubernetes-cni

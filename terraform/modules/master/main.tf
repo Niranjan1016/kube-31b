@@ -83,7 +83,7 @@ locals {
 resource "null_resource" "download_kubeconfig_file" {
   provisioner "local-exec" {
     command = <<-EOF
-    scp -q -i ${var.ssh_private_key} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${aws_instance.master.public_ip}:/home/ubuntu/admin.conf ${local.kubeconfig_file} >/dev/null
+    scp -q -i ${var.ssh_private_key} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${aws_instance.master.public_ip}:/home/ubuntu/.kube/config ${local.kubeconfig_file} >/dev/null
     EOF
   }
   triggers = {

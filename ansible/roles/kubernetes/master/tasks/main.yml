@@ -60,7 +60,7 @@
     - { name: 'vm.swappiness', value: '0' }
     - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
     - { name: 'net.bridge.bridge-nf-call-ip6tables', value: "1"}
-    - { name: 'net.ipv4.ip_forward', value='1'}
+    - { name: 'net.ipv4.ip_forward', value: '1'}
 
 - name: Reload sysctl modules
   command: "sudo sysctl --system"   
